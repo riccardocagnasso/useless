@@ -28,7 +28,7 @@ class Structure(metaclass=OrderedClass):
 
     def __repr__(self):
         fields = "\n".join(
-            ["\t{0} = {1}".format(attrname, getattr(self, attrname))
+            ["\t{0} = {1}".format(attrname, getattr(self, attrname).__repr__())
                 for attrname in self.__class__.get_fields_names()])
 
         return "{0} \n {1}".format(self.__class__.__name__, fields)
