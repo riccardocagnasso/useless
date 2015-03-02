@@ -1,7 +1,6 @@
 import argparse
 from useless.elf.structures import *
 from useless.display import *
-import pprint
 
 
 def get_argument_parser():
@@ -35,10 +34,7 @@ def main():
     args = get_argument_parser()
 
     stream = open(args.library, 'rb')
-
     header = ELF_Header(stream)
-
-    pp = pprint.PrettyPrinter(indent=4)
 
     if args.header:
         print(HeaderTable(header))
