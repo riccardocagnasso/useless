@@ -45,12 +45,13 @@ class ELF_Unsigned_Char(ELF_Sword):
     struct_type = 'c'
 
 
-class ELF_Addr(ELFDataType):
+class ELF_Addr(ELF_Sword):
     length = 8
+    struct_type = 'Q'
 
     @classmethod
-    def parse(cls, stream):
-        return stream.read(cls.length)
+    def parse(self, stream):
+        return hex(super(ELF_Addr, self).parse(stream))
 
 
 class ELF_Off(ELF_Xword):

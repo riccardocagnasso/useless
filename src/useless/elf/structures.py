@@ -53,15 +53,40 @@ class ELF_Header(Structure):
 
     @cached_property
     def section_string_table(self):
-        return ELF_SectionStringTable(
+        section_string_table_header = ELF_SectionHeader(
             self.stream, self.e_shoff +
             (self.e_shentsize*self.e_shstrndx), self)
+
+        return ELF_StringTable(self.stream,
+                               section_string_table_header.sh_offset)
+
+    @cached_property
+    def dynsym_string_table(self):
+        dynstrheader = self.get_section_header_by_name('.dynstr')
+
+        return ELF_StringTable(self.stream,
+                               dynstrheader.sh_offset)
 
     @cached_property
     def sections(self):
         return [ELF_SectionHeader(
                 self.stream, self.e_shoff + (self.e_shentsize*i), self)
                 for i in range(0, self.e_shnum)]
+
+    @cached_property
+    def symbol_table(self):
+        for s in self.sections:
+            if s.name == ".dynsym":
+                i = 0
+                symbol_size = ELF_Symbol.get_size()
+                while (i+1)*symbol_size < s.sh_size:
+                    i += 1
+                    yield ELF_Symbol(self.stream,
+                                     s.sh_offset + (i*symbol_size),
+                                     self)
+
+    def get_section_header_by_name(self, name):
+        return list(filter(lambda s: s.name == name, self.sections))[0]
 
     def __init__(self, stream, offset=0):
         super(ELF_Header, self).__init__(stream, offset+16)
@@ -88,29 +113,33 @@ class ELF_SectionHeader(Structure):
 
     @property
     def name(self):
-        return parse_cstring(
-            self.stream, self.elf_header.section_string_table.sh_offset +
-            self.sh_name)
+        return self.elf_header.section_string_table.get_string(self.sh_name)
 
 
-class ELF_StringTable(ELF_SectionHeader):
-    def get_string(string_offset):
+class ELF_StringTable(object):
+    def __init__(self, stream, offset):
+        self.stream = stream
+        self.offset = offset
+
+    def get_string(self, string_offset):
         return parse_cstring(self.stream, self.offset+string_offset)
 
-    @classmethod
-    def get_fields_names(cls):
-        # a bit of an hack?
-        return [attrname for attrname in ELF_SectionHeader.members
-                if attrname.startswith(cls.field_prefix)]
 
+class ELF_Symbol(Structure):
+    field_prefix = 'st_'
 
-class ELF_SectionStringTable(ELF_SectionHeader):
+    st_name = ELF_Word
+    st_info = ELF_Unsigned_Char
+    st_other = ELF_Unsigned_Char
+    st_shndx = ELF_Half
+    st_value = ELF_Addr
+    st_size = ELF_Xword
+
+    def __init__(self, stream, offset=0, header=None):
+        self.elf_header = header
+
+        super(ELF_Symbol, self).__init__(stream, offset)
+
     @property
     def name(self):
-        return ".shstrtab"
-
-    @classmethod
-    def get_fields_names(cls):
-        # a bit of an hack?
-        return [attrname for attrname in ELF_SectionHeader.members
-                if attrname.startswith(cls.field_prefix)]
+        return self.elf_header.dynsym_string_table.get_string(self.st_name)

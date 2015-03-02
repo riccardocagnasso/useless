@@ -1,5 +1,6 @@
 import argparse
 from useless.elf.structures import *
+import pprint
 
 
 def get_argument_parser():
@@ -23,9 +24,15 @@ def main():
 
     header = ELF_Header(stream)
 
+    pp = pprint.PrettyPrinter(indent=4)
+
     for s in header.sections:
-        print(s.name)
-        print(s)
+        pp.pprint(s.name)
+        pp.pprint(s)
+
+    for s in header.symbol_table:
+        pp.pprint(s.name)
+        pp.pprint(s)
 
 if __name__ == "__main__":
     main()
