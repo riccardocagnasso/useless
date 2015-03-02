@@ -1,5 +1,6 @@
 import argparse
 from useless.elf.structures import *
+from useless.display import *
 import pprint
 
 
@@ -40,17 +41,13 @@ def main():
     pp = pprint.PrettyPrinter(indent=4)
 
     if args.header:
-        pp.pprint(header)
+        print(HeaderTable(header))
 
     if args.sections:
-        for s in header.sections:
-            pp.pprint(s.name)
-            pp.pprint(s)
+        print(SectionsTable(header.sections))
 
     if args.dynsym:
-        for s in header.symbol_table:
-            pp.pprint(s.name)
-            pp.pprint(s)
+        print(SymbolsTable(header.symbol_table))
 
 if __name__ == "__main__":
     main()

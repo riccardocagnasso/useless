@@ -15,4 +15,6 @@ setup(
                  'useless.elf': 'src/useless/elf/'},
 
     scripts=['src/usls.py'],
-    install_requires=['cached_property'])
+    install_requires=[
+        'cached_property',
+        'prettytable'])
