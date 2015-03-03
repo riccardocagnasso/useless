@@ -1,37 +1,8 @@
 from .datatypes import *
 from .enums import *
-from . import OrderedClass, parse_cstring
+from . import parse_cstring
+from ..common.structures import *
 from cached_property import cached_property
-
-
-class Structure(metaclass=OrderedClass):
-    field_prefix = ''
-
-    def __init__(self, stream, offset=0):
-        self.stream = stream
-
-        self.stream.seek(offset)
-
-        for attrname in self.__class__.get_fields_names():
-            setattr(self, attrname, getattr(
-                self, attrname).parse(self.stream))
-
-    @classmethod
-    def get_fields_names(cls):
-        return [attrname for attrname in cls.members
-                if attrname.startswith(cls.field_prefix)]
-
-    @classmethod
-    def get_size(cls):
-        return sum([getattr(cls, name).length
-                    for name in cls.get_fields_names()])
-
-    def __repr__(self):
-        fields = "\n".join(
-            ["\t{0} = {1}".format(attrname, getattr(self, attrname).__repr__())
-                for attrname in self.__class__.get_fields_names()])
-
-        return "{0} \n {1}".format(self.__class__.__name__, fields)
 
 
 class ELF_Header(Structure):
