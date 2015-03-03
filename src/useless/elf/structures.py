@@ -6,8 +6,6 @@ from cached_property import cached_property
 
 
 class ELF_Header(Structure):
-    field_prefix = 'e_'
-
     e_type = ELF_Half
     e_machine = ELF_Half
     e_version = ELF_Word
@@ -64,8 +62,6 @@ class ELF_Header(Structure):
 
 
 class ELF_SectionHeader(Structure):
-    field_prefix = 'sh_'
-
     sh_name = ELF_Word
     sh_type = ELF_SectionType
     sh_flags = ELF_Xword
@@ -97,8 +93,6 @@ class ELF_StringTable(object):
 
 
 class ELF_Symbol(Structure):
-    field_prefix = 'st_'
-
     st_name = ELF_Word
     st_info = ELF_Unsigned_Char
     st_other = ELF_Unsigned_Char

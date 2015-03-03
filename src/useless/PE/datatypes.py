@@ -1,15 +1,10 @@
 import struct
+from ..common.datatypes import BinaryDataType
 
 
-class BinaryDataType(object):
-    length = None
-    struct_type = None
-
-    @classmethod
-    def parse(cls, stream):
-        b = stream.read(cls.length)
-
-        return struct.unpack(cls.struct_type, b)[0]
+class PE_Char(BinaryDataType):
+    length = 1
+    struct_type = 'B'
 
 
 class PE_Word(BinaryDataType):
@@ -18,9 +13,27 @@ class PE_Word(BinaryDataType):
 
 
 class PE_DWord(BinaryDataType):
-    length = 2
+    length = 4
     struct_type = 'I'
 
+
+class PE_NameField(BinaryDataType):
+    length = 8
+    struct_type = 'c'
+
+    @classmethod
+    def parse(cls, stream):
+        string = ""
+
+        for i in range(0, cls.length):
+            char = struct.unpack('c', stream.read(1))[0]
+
+            if char == b'\x00':
+                pass
+            else:
+                string += char.decode()
+
+        return string
 
 """class PE_Addr(PE_Word):
     @classmethod

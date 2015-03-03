@@ -1,8 +1,9 @@
-from enum import IntEnum
+from ..common.enums import BinaryEnum
 from .datatypes import ELF_Word
+from ..common.datatypes import BinaryDataType
 
 
-class ELF_SectionType(IntEnum):
+class ELF_SectionType(BinaryEnum):
     SH_NULL = 0
     SHT_PROGBITS = 1
     SHT_SYMTAB = 2

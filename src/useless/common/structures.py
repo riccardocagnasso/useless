@@ -1,4 +1,7 @@
 import collections
+from .datatypes import BinaryDataType
+from .enums import BinaryEnum
+import inspect
 
 
 class OrderedClass(type):
@@ -13,8 +16,6 @@ class OrderedClass(type):
 
 
 class Structure(metaclass=OrderedClass):
-    field_prefix = ''
-
     def __init__(self, stream, offset=0):
         self.stream = stream
 
@@ -26,8 +27,12 @@ class Structure(metaclass=OrderedClass):
 
     @classmethod
     def get_fields_names(cls):
-        return [attrname for attrname in cls.members
-                if attrname.startswith(cls.field_prefix)]
+        for attrname in cls.members:
+            attr = getattr(cls, attrname)
+            if inspect.isclass(attr):
+                if issubclass(attr, BinaryDataType) or\
+                        issubclass(attr, BinaryEnum):
+                    yield attrname
 
     @classmethod
     def get_size(cls):
