@@ -1,6 +1,6 @@
 from .datatypes import *
 from .enums import *
-from . import parse_cstring
+from ..common import parse_cstring
 from ..common.structures import *
 from cached_property import cached_property
 

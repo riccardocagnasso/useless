@@ -49,7 +49,11 @@ def main():
         print(se)
 
     print('EXPORT')
-    print(PE.dir_export)
+    print(PE.dir_export_table)
+    # print(list(PE.get_exported_names()))
+
+    print('IMPORT')
+    print(list(PE.dir_import_table))
 
 if __name__ == "__main__":
     main()

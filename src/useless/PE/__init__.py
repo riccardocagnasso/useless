@@ -1,6 +1,7 @@
 from cached_property import cached_property
 from useless.PE.structures import *
 from useless.PE.datatypes import *
+from ..common import parse_cstring
 
 PE_HEADER_OFFSET_CONSTANT = 0x3c
 
@@ -54,19 +55,49 @@ class PE_File(object):
             yield Section_Header(self.stream, offset)
 
     def get_section_of_rva(self, rva):
-        sections = sorted(self.section_headers, key=lambda s: s.VirtualAddress)
+        for s in self.section_headers:
+            if s.VirtualAddress <= rva and\
+               (s.VirtualAddress + s.VirtualSize) > rva:
+                return s
 
-        prev = None
-        for s in sections:
-            if s.VirtualAddress > rva:
-                return prev
-            else:
-                prev = s
+    def resolve_rva(self, rva):
+        containing_section = self.get_section_of_rva(rva)
+
+        in_section_offset = containing_section.PointerToRawData -\
+            containing_section.VirtualAddress
+
+        return in_section_offset + rva
 
     @cached_property
-    def dir_export(self):
+    def dir_export_table(self):
         export_header = list(self.optional_data_directories)[0]
-        containing_section = self.get_section_of_rva(
-            export_header.VirtualAddress)
+        export_offset = self.resolve_rva(export_header.VirtualAddress)
 
-        return containing_section
+        return Export_DirectoryTable(self.stream, export_offset, self)
+
+    def get_exported_names(self):
+        export_table = self.dir_export_table
+
+        for i in range(0, export_table.NumberOfNamePointers):
+            self.stream.seek(self.resolve_rva(export_table.NamePointerRVA)+4*i)
+            name_rva = PE_DWord.parse(self.stream)
+            yield parse_cstring(self.stream, self.resolve_rva(name_rva))
+
+    @property
+    def dir_import_table(self):
+        import_header = list(self.optional_data_directories)[1]
+        import_offset = self.resolve_rva(import_header.VirtualAddress)
+
+        i = 0
+        while True:
+            offset = import_offset + i*Import_DirectoryTable.get_size()
+            idt = Import_DirectoryTable(self.stream, offset)
+
+            print(idt.is_empty())
+
+            if idt.is_empty():
+                break
+            else:
+                yield idt
+
+            i += 1

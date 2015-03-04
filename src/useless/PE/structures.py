@@ -1,5 +1,6 @@
 from .datatypes import *
 from ..common.structures import *
+from cached_property import cached_property
 
 
 class COFF_Header(Structure):
@@ -65,3 +66,37 @@ class Section_Header(Structure):
     NumberOfRelocations = PE_Word
     NumberOfLinenumbers = PE_Word
     Characteristics = PE_DWord
+
+
+class Import_DirectoryTable(Structure):
+    ImportLookupTableRVA = PE_DWord
+    TimeDateStamp = PE_DWord
+    ForwarderChain = PE_DWord
+    NameRVA = PE_DWord
+    ImportAddressTableRVA = PE_DWord
+
+    def is_empty(self):
+        return not any([getattr(self, x) == 0
+                        for x in self.get_fields_names()])
+
+
+class Export_DirectoryTable(Structure):
+    ExportFlags = PE_DWord
+    TimeDateStamp = PE_DWord
+    MajorVersion = PE_Word
+    MinorVersion = PE_Word
+    NameRVA = PE_DWord
+    OrdinalBase = PE_DWord
+    AddressTableEntries = PE_DWord
+    NumberOfNamePointers = PE_DWord
+    ExportAddressTableRVA = PE_DWord
+    NamePointerRVA = PE_DWord
+    OrdinalTableRVA = PE_DWord
+
+    def __init__(self, stream, offset, pe):
+        self.pe = pe
+        super(Export_DirectoryTable, self).__init__(stream, offset)
+
+    @cached_property
+    def Name(self):
+        return parse_cstring(self.stream, self.pe.resove_rva(self.NameRVA))
