@@ -75,14 +75,6 @@ class PE_File(object):
 
         return Export_DirectoryTable(self.stream, export_offset, self)
 
-    def get_exported_names(self):
-        export_table = self.dir_export_table
-
-        for i in range(0, export_table.NumberOfNamePointers):
-            self.stream.seek(self.resolve_rva(export_table.NamePointerRVA)+4*i)
-            name_rva = PE_DWord.parse(self.stream)
-            yield parse_cstring(self.stream, self.resolve_rva(name_rva))
-
     @property
     def dir_import_table(self):
         import_header = list(self.optional_data_directories)[1]
@@ -91,9 +83,7 @@ class PE_File(object):
         i = 0
         while True:
             offset = import_offset + i*Import_DirectoryTable.get_size()
-            idt = Import_DirectoryTable(self.stream, offset)
-
-            print(idt.is_empty())
+            idt = Import_DirectoryTable(self.stream, offset, self)
 
             if idt.is_empty():
                 break

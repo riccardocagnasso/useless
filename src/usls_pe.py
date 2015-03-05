@@ -50,10 +50,15 @@ def main():
 
     print('EXPORT')
     print(PE.dir_export_table)
+    # for s in PE.dir_export_table.get_symbols():
+    #    print(s)
     # print(list(PE.get_exported_names()))
 
     print('IMPORT')
-    print(list(PE.dir_import_table))
+    for dit in PE.dir_import_table:
+        print(dit)
+        print(dit.Name)
+        print(list(dit.get_imported_symbols()))
 
 if __name__ == "__main__":
     main()

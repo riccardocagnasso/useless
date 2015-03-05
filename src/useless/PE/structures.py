@@ -1,5 +1,6 @@
 from .datatypes import *
 from ..common.structures import *
+from ..common import parse_cstring
 from cached_property import cached_property
 
 
@@ -68,18 +69,6 @@ class Section_Header(Structure):
     Characteristics = PE_DWord
 
 
-class Import_DirectoryTable(Structure):
-    ImportLookupTableRVA = PE_DWord
-    TimeDateStamp = PE_DWord
-    ForwarderChain = PE_DWord
-    NameRVA = PE_DWord
-    ImportAddressTableRVA = PE_DWord
-
-    def is_empty(self):
-        return not any([getattr(self, x) == 0
-                        for x in self.get_fields_names()])
-
-
 class Export_DirectoryTable(Structure):
     ExportFlags = PE_DWord
     TimeDateStamp = PE_DWord
@@ -99,4 +88,74 @@ class Export_DirectoryTable(Structure):
 
     @cached_property
     def Name(self):
-        return parse_cstring(self.stream, self.pe.resove_rva(self.NameRVA))
+        return parse_cstring(self.stream, self.pe.resolve_rva(self.NameRVA))
+
+    def get_symbols(self):
+        for i in range(0, self.NumberOfNamePointers):
+            self.stream.seek(self.pe.resolve_rva(self.NamePointerRVA)+4*i)
+            name_rva = PE_DWord.parse(self.stream)
+            name = parse_cstring(self.stream, self.pe.resolve_rva(name_rva))
+
+            self.stream.seek(self.pe.resolve_rva(self.OrdinalTableRVA+2*i))
+            ordinal = PE_Word.parse(self.stream)
+
+            eat_offset = self.pe.resolve_rva(self.ExportAddressTableRVA)\
+                + 8*ordinal
+            eat = Export_AddressTable(self.stream, eat_offset)
+
+            yield(name, eat)
+
+
+class Export_AddressTable(Structure):
+    ExportRVA = PE_DWord
+    ForwarderRVA = PE_DWord
+
+
+class Import_DirectoryTable(Structure):
+    ImportLookupTableRVA = PE_DWord
+    TimeDateStamp = PE_DWord
+    ForwarderChain = PE_DWord
+    NameRVA = PE_DWord
+    ImportAddressTableRVA = PE_DWord
+
+    def __init__(self, stream, offset, pe):
+        self.pe = pe
+        super(Import_DirectoryTable, self).__init__(stream, offset)
+
+    def is_empty(self):
+        return not any([getattr(self, x) != 0
+                        for x in self.get_fields_names()])
+
+    @cached_property
+    def Name(self):
+        return parse_cstring(self.stream, self.pe.resolve_rva(self.NameRVA))
+
+    def get_import_lookup_table(self):
+        ilt_offset = self.pe.resolve_rva(self.ImportLookupTableRVA)
+
+        self.stream.seek(ilt_offset)
+        i = 0
+        while True:
+            # we do the seek everytime because this is an iterator
+            self.stream.seek(ilt_offset + i*PE_DWord.length)
+            ilt_entry = PE_DWord.parse(self.stream)
+            i += 1
+
+            if(ilt_entry == 0):
+                break
+            else:
+                yield ilt_entry
+
+    def resolve_import_lookup_entry(self, il):
+        ORDINAL_NAME_MASK = 0x80000000
+        ORDINAL_MASK = 0xffff
+
+        if (il & ORDINAL_NAME_MASK) > 0:
+            # ordinal
+            return il & ORDINAL_MASK
+        else:
+            return parse_cstring(self.stream, self.pe.resolve_rva(il) + 2)
+
+    def get_imported_symbols(self):
+        for il in self.get_import_lookup_table():
+            yield self.resolve_import_lookup_entry(il)
