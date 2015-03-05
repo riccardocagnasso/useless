@@ -39,7 +39,10 @@ class PE_File(object):
 
         for i in range(0, self.optional_windows_fields.NumberOfRvaAndSizes):
             offset = base_offset + i*OptionalHeader_DataDirectory.get_size()
-            yield OptionalHeader_DataDirectory(self.stream, offset)
+            header = OptionalHeader_DataDirectory(self.stream, offset, i)
+
+            if not header.is_empty():
+                yield header
 
     @property
     def section_headers(self):

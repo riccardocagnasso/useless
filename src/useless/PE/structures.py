@@ -1,4 +1,5 @@
 from .datatypes import *
+from .enums import *
 from ..common.structures import *
 from ..common import parse_cstring
 from cached_property import cached_property
@@ -54,6 +55,13 @@ class OptionalHeader_WindowsFields(Structure):
 class OptionalHeader_DataDirectory(Structure):
     VirtualAddress = PE_DWord
     Size = PE_DWord
+
+    def __init__(self, stream, offset, num):
+        super(OptionalHeader_DataDirectory, self).__init__(stream, offset)
+        self.Type = DirectoryType(num)
+
+    def is_empty(self):
+        return (self.VirtualAddress == 0) and (self.Size == 0)
 
 
 class Section_Header(Structure):

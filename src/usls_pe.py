@@ -1,7 +1,7 @@
 import argparse
 
 from useless.PE import PE_File
-from useless.display import *
+from useless.display.PE import *
 
 
 def get_argument_parser():
@@ -38,27 +38,20 @@ def main():
 
     PE = PE_File(stream)
 
-    print(PE.coff_header)
-    print(PE.optional_standard_fields)
-    print(PE.optional_windows_fields)
+    print('HEADER')
+    print(Header(PE.coff_header,
+                 PE.optional_standard_fields, PE.optional_windows_fields))
 
-    for dd in PE.optional_data_directories:
-        print(dd)
+    # for dd in PE.optional_data_directories:
+    #     print(dd)
+    print(Directories(PE.optional_data_directories))
+    print(Sections(PE.section_headers))
 
-    for se in PE.section_headers:
-        print(se)
+    # print('EXPORT')
+    # print(ExportTable(PE.dir_export_table))
 
-    print('EXPORT')
-    print(PE.dir_export_table)
-    # for s in PE.dir_export_table.get_symbols():
-    #    print(s)
-    # print(list(PE.get_exported_names()))
-
-    print('IMPORT')
-    for dit in PE.dir_import_table:
-        print(dit)
-        print(dit.Name)
-        print(list(dit.get_imported_symbols()))
+    # print('IMPORT')
+    # print(ImportTable(PE.dir_import_table))
 
 if __name__ == "__main__":
     main()
