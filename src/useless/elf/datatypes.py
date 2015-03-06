@@ -28,7 +28,7 @@ class ELF_Half(BinaryDataType):
 
 class ELF_Unsigned_Char(BinaryDataType):
     length = 1
-    struct_type = 'c'
+    struct_type = 'B'
 
 
 class ELF_Addr(BinaryDataType):

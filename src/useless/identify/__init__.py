@@ -13,4 +13,4 @@ class Magic(object):
     def is_pe(self):
         self.stream.seek(0)
         magic = self.stream.read(2)
-        return is_dos = (magic == b'MZ') or (magic == b'ZM')
+        return (magic == b'MZ') or (magic == b'ZM')
