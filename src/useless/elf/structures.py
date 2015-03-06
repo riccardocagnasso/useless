@@ -20,45 +20,8 @@ class ELF_Header(Structure):
     e_shnum = ELF_Half
     e_shstrndx = ELF_Half
 
-    @cached_property
-    def section_string_table(self):
-        section_string_table_header = ELF_SectionHeader(
-            self.stream, self.e_shoff +
-            (self.e_shentsize*self.e_shstrndx), self)
-
-        return ELF_StringTable(self.stream,
-                               section_string_table_header.sh_offset)
-
-    @cached_property
-    def dynsym_string_table(self):
-        dynstrheader = self.get_section_header_by_name('.dynstr')
-
-        return ELF_StringTable(self.stream,
-                               dynstrheader.sh_offset)
-
-    @cached_property
-    def sections(self):
-        return [ELF_SectionHeader(
-                self.stream, self.e_shoff + (self.e_shentsize*i), self)
-                for i in range(0, self.e_shnum)]
-
-    @cached_property
-    def symbol_table(self):
-        for s in self.sections:
-            if s.name == ".dynsym":
-                i = 0
-                symbol_size = ELF_Symbol.get_size()
-                while (i+1)*symbol_size < s.sh_size:
-                    i += 1
-                    yield ELF_Symbol(self.stream,
-                                     s.sh_offset + (i*symbol_size),
-                                     self)
-
-    def get_section_header_by_name(self, name):
-        return list(filter(lambda s: s.name == name, self.sections))[0]
-
     def __init__(self, stream, offset=0):
-        super(ELF_Header, self).__init__(stream, offset+16)
+        super(ELF_Header, self).__init__(stream, offset)
 
 
 class ELF_SectionHeader(Structure):
@@ -73,14 +36,14 @@ class ELF_SectionHeader(Structure):
     sh_addralign = ELF_Xword
     sh_entsize = ELF_Xword
 
-    def __init__(self, stream, offset=0, header=None):
-        self.elf_header = header
+    def __init__(self, stream, offset=0, elf=None):
+        self.elf = elf
 
         super(ELF_SectionHeader, self).__init__(stream, offset)
 
     @property
     def name(self):
-        return self.elf_header.section_string_table.get_string(self.sh_name)
+        return self.elf.section_string_table.get_string(self.sh_name)
 
 
 class ELF_StringTable(object):

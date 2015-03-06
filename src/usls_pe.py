@@ -23,8 +23,8 @@ def get_argument_parser():
                         help='print sections list')
     parser.set_defaults(sections=False)
 
-    parser.add_argument('-d', '--dynsym',
-                        dest='dynsym', action='store_true',
+    parser.add_argument('-S', '--symbols',
+                        dest='symbols', action='store_true',
                         help='print content of dynamic symbol table')
     parser.set_defaults(dynsym=False)
 
@@ -38,20 +38,23 @@ def main():
 
     PE = PE_File(stream)
 
-    print('HEADER')
-    print(Header(PE.coff_header,
-                 PE.optional_standard_fields, PE.optional_windows_fields))
+    if args.header:
+        print('Headers')
+        print(Header(PE.coff_header,
+                     PE.optional_standard_fields, PE.optional_windows_fields))
 
-    # for dd in PE.optional_data_directories:
-    #     print(dd)
-    print(Directories(PE.optional_data_directories))
-    print(Sections(PE.section_headers))
+    if args.sections:
+        print('Sections')
+        print(Sections(PE.section_headers))
+        print('Directories')
+        print(Directories(PE.optional_data_directories))
 
-    # print('EXPORT')
-    # print(ExportTable(PE.dir_export_table))
+    if args.symbols:
+        print('Exported Symbols')
+        print(ExportTable(PE.dir_export_table))
 
-    # print('IMPORT')
-    # print(ImportTable(PE.dir_import_table))
+        print('Imported Symbols')
+        print(ImportTable(PE.dir_import_table))
 
 if __name__ == "__main__":
     main()
