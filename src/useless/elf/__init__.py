@@ -7,6 +7,10 @@ ELF_HEADER_OFFSET_CONSTANT = 0x10
 
 
 class ELF_File(object):
+    """
+        ELF_File represents a ELF dynamic object and provides methods to
+        access all data structures
+    """
     def __init__(self, stream):
         self.stream = stream
 

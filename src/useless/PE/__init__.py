@@ -7,6 +7,11 @@ PE_HEADER_OFFSET_CONSTANT = 0x3c
 
 
 class PE_File(object):
+    """
+        PE_File represents a PE dynamic object and provides methods to
+        access all data structures
+    """
+
     def __init__(self, stream):
         self.stream = stream
 
@@ -32,6 +37,20 @@ class PE_File(object):
 
     @property
     def optional_data_directories(self):
+        """
+            Data directories entries are somewhat wierd.
+
+            First of all they have no direct type information in it, the type
+            is assumed from the position inside the table. For this reason
+            there are often "null" entries, with all fields set to zero.
+
+            Here we parse all the entries, assign the correct type via position
+            and then filter out the "null" ones.
+
+            Even if the algorithm itself if quite simple, figuring it required a
+            huge amount of time staring at PE/COFF specification with a 8O like
+            expression thinking "WTF? WTF! WTF? WHY?!"
+        """
         base_offset = self.pe_header_offset +\
             COFF_Header.get_size() +\
             OptionalHeader_StandardFields.get_size() +\
@@ -64,6 +83,16 @@ class PE_File(object):
                 return s
 
     def resolve_rva(self, rva):
+        """
+            RVAs are supposed to be used with the image of the file in memory.
+            There's no direct algorithm to calculate the offset of an RVA in
+            the file.
+
+            What we do here is to find the section that contains the RVA and
+            then we calculate the offset between the RVA of the section
+            and the offset of the section in the file. With this offset, we can
+            compute the position of the RVA in the file
+        """
         containing_section = self.get_section_of_rva(rva)
 
         in_section_offset = containing_section.PointerToRawData -\
@@ -80,6 +109,10 @@ class PE_File(object):
 
     @property
     def dir_import_table(self):
+        """
+            import table is terminated by a all-null entry, so we have to
+            check for that
+        """
         import_header = list(self.optional_data_directories)[1]
         import_offset = self.resolve_rva(import_header.VirtualAddress)
 

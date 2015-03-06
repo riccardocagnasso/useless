@@ -35,10 +35,6 @@ class ELF_Addr(BinaryDataType):
     length = 8
     struct_type = 'Q'
 
-    @classmethod
-    def parse(self, stream):
-        return hex(super(ELF_Addr, self).parse(stream))
-
 
 class ELF_Off(ELF_Xword):
     pass

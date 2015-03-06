@@ -2,6 +2,14 @@ import struct
 
 
 def parse_cstring(stream, offset):
+    """
+        parse_cstring will parse a null-terminated string in a bytestream.
+
+        The string will be decoded with UTF-8 decoder, of course since we are
+        doing this byte-a-byte, it won't really work for all Unicode strings.
+
+        TODO: add proper Unicode support
+    """
     stream.seek(offset)
 
     string = ""

@@ -34,14 +34,3 @@ class PE_NameField(BinaryDataType):
                 string += char.decode()
 
         return string
-
-"""class PE_Addr(PE_Word):
-    @classmethod
-    def parse(cls, stream):
-        return hex(super(PE_Addr, self).parse(stream))
-
-
-class PE_DAddr(PE_DWord):
-    @classmethod
-    def parse(cls, stream):
-        return hex(super(PE_Addr, self).parse(stream))"""
